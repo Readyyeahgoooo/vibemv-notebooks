@@ -1,5 +1,6 @@
-# Minimal dependencies to avoid Gradio schema bugs
+# Compatible dependency versions for Gradio 3.x
 gradio==3.50.2
+huggingface-hub==0.16.4
 numpy>=1.24.0
 librosa>=0.10.0
 soundfile>=0.12.0
