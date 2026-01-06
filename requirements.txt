@@ -1,6 +1,5 @@
-# Strictly compatible versions for Gradio 3.x
-gradio==3.50.2
-huggingface-hub==0.14.1
+# Let HuggingFace Spaces handle Gradio dependencies via sdk_version in README
+# Only specify our additional dependencies
 numpy>=1.24.0,<2.0.0
 librosa>=0.10.0
 soundfile>=0.12.0

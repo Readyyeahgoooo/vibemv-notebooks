@@ -1,27 +1,24 @@
 """
 VibeMV Studio - AI Music Video Generator
-Minimal version for Gradio 3.x compatibility
+Compatible with Gradio 4.x (managed by HF Spaces)
 """
 
 import gradio as gr
 import json
 import logging
 
-# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global state
 scenes_state = []
 
 def analyze_audio(audio_file):
-    """Analyze audio file and detect beats."""
+    """Analyze audio and detect beats."""
     if not audio_file:
         return "❌ Please upload an audio file first."
     
     try:
         import librosa
-        import numpy as np
         
         y, sr = librosa.load(audio_file)
         duration = librosa.get_duration(y=y, sr=sr)
@@ -46,10 +43,9 @@ Duration: {duration:.2f}s | Tempo: {tempo:.1f} BPM | Beats: {len(beat_times)}
 
 Suggested {len(scene_times)} scenes at: {', '.join([f'{t:.1f}s' for t in scene_times[:8]])}...
 
-Add scenes below to build your timeline!"""
+Add scenes below!"""
         
     except Exception as e:
-        logger.error(f"Analysis failed: {e}")
         return f"❌ Error: {str(e)}"
 
 def add_scene(prompt, start, duration, camera):
@@ -72,7 +68,7 @@ def add_scene(prompt, start, duration, camera):
     return timeline, f"✅ Added Scene {scene['id']}"
 
 def export_json():
-    """Export timeline as JSON."""
+    """Export timeline."""
     return json.dumps({"version": "1.0", "scenes": scenes_state}, indent=2)
 
 def clear_all():
@@ -81,7 +77,7 @@ def clear_all():
     scenes_state = []
     return "", "✅ Cleared", ""
 
-# Build interface
+# Build UI
 with gr.Blocks(title="VibeMV Studio") as demo:
     gr.Markdown("# 🎬 VibeMV Studio")
     gr.Markdown("AI Music Video Timeline Generator")
