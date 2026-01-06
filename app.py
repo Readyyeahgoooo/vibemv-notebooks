@@ -1,15 +1,13 @@
 """
 VibeMV Studio - AI Music Video Generator
-Main Gradio Application
+Main Gradio Application (Simplified to avoid schema errors)
 """
 
 import gradio as gr
 import os
 import json
-import tempfile
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +32,7 @@ def analyze_audio(audio_file):
         tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
         beat_times = librosa.frames_to_time(beat_frames, sr=sr)
         
-        # Create suggested scene timestamps (every 4 seconds or on strong beats)
+        # Create suggested scene timestamps
         scene_times = []
         min_interval = 4.0
         last_time = 0
@@ -44,12 +42,10 @@ def analyze_audio(audio_file):
                 scene_times.append(float(beat_time))
                 last_time = beat_time
         
-        # Add final timestamp
         if duration - last_time > 2.0:
             scene_times.append(float(duration))
         
-        analysis_text = f"""
-✅ **Audio Analysis Complete!**
+        analysis_text = f"""✅ **Audio Analysis Complete!**
 
 📊 **Audio Info:**
 - Duration: {duration:.2f} seconds
@@ -63,7 +59,6 @@ def analyze_audio(audio_file):
 Click "Add Scene" to start building your music video!
 """
         
-        # Store in global state
         global scenes_state
         scenes_state = []
         
@@ -73,66 +68,28 @@ Click "Add Scene" to start building your music video!
         logger.error(f"Audio analysis failed: {e}")
         return f"❌ Audio analysis failed: {str(e)}"
 
-def add_scene(prompt, reference_image, start_time, duration, camera_motion):
+def add_scene(prompt, start_time, duration, camera_motion):
     """Add a new scene to the timeline."""
     global scenes_state
     
     scene = {
         "id": len(scenes_state) + 1,
-        "prompt": prompt,
-        "reference_image": reference_image,
+        "prompt": prompt or "Scene description",
         "start_time": float(start_time) if start_time else 0.0,
         "duration": float(duration) if duration else 4.0,
-        "camera_motion": camera_motion,
-        "generated_video": None
+        "camera_motion": camera_motion
     }
     
     scenes_state.append(scene)
     
     # Create timeline visualization
     timeline_text = "📽️ **Current Timeline:**\n\n"
-    for i, s in enumerate(scenes_state):
+    for s in scenes_state:
         timeline_text += f"**Scene {s['id']}** ({s['start_time']:.1f}s - {s['start_time'] + s['duration']:.1f}s)\n"
         timeline_text += f"  - Prompt: {s['prompt'][:50]}...\n"
-        timeline_text += f"  - Camera: {s['camera_motion']}\n"
-        if s['reference_image']:
-            timeline_text += f"  - Reference: ✅\n"
-        timeline_text += "\n"
+        timeline_text += f"  - Camera: {s['camera_motion']}\n\n"
     
     return timeline_text, f"✅ Added Scene {scene['id']}"
-
-def generate_scene_video(scene_index, openrouter_key="", hf_token=""):
-    """Generate video for a specific scene."""
-    global scenes_state
-    
-    if scene_index >= len(scenes_state):
-        return None, "❌ Invalid scene index"
-    
-    scene = scenes_state[scene_index]
-    
-    try:
-        # For now, create a placeholder
-        # In production, this would call Stable Video Diffusion or similar
-        status = f"""
-🎬 **Generating Scene {scene['id']}...**
-
-Prompt: {scene['prompt']}
-Duration: {scene['duration']}s
-Camera: {scene['camera_motion']}
-
-⚠️ Note: Video generation requires GPU and will be implemented with:
-- Stable Video Diffusion for motion
-- Frame interpolation for smooth playback
-- 3D scene rendering if reference image provided
-
-For now, this is a placeholder.
-"""
-        
-        return None, status
-        
-    except Exception as e:
-        logger.error(f"Scene generation failed: {e}")
-        return None, f"❌ Generation failed: {str(e)}"
 
 def export_timeline():
     """Export the current timeline as JSON."""
@@ -155,21 +112,10 @@ def clear_timeline():
 with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
     
     gr.Markdown("# 🎬 VibeMV Studio - AI Music Video Generator")
-    gr.Markdown("Create professional music videos with AI-powered scene generation and 3D integration")
-    
-    # API Keys
-    with gr.Accordion("🔑 API Keys (Optional)", open=False):
-        gr.Markdown("""
-        **Optional for Enhanced Features:**
-        - **OpenRouter**: Better scene descriptions
-        - **HuggingFace**: Higher rate limits for video generation
-        """)
-        with gr.Row():
-            openrouter_key = gr.Textbox(label="OpenRouter API Key", type="password", placeholder="sk-or-...")
-            hf_token = gr.Textbox(label="HuggingFace Token", type="password", placeholder="hf_...")
+    gr.Markdown("Create professional music videos with AI-powered scene generation")
     
     with gr.Row():
-        # Left Column - Timeline & Controls
+        # Left Column
         with gr.Column(scale=1):
             gr.Markdown("## 📤 Step 1: Upload Audio")
             audio_input = gr.Audio(label="Music File", type="filepath")
@@ -185,12 +131,6 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
                 lines=2
             )
             
-            reference_image = gr.Image(
-                label="Reference Image (Optional)",
-                type="filepath",
-                height=200
-            )
-            
             with gr.Row():
                 start_time = gr.Number(label="Start Time (s)", value=0.0)
                 duration = gr.Number(label="Duration (s)", value=4.0)
@@ -204,14 +144,13 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
             add_scene_btn = gr.Button("➕ Add Scene to Timeline", variant="primary")
             scene_status = gr.Textbox(label="Status", lines=1)
             
-            gr.Markdown("## 🎬 Step 3: Generate Video")
+            gr.Markdown("## 🎬 Step 3: Export")
             
             with gr.Row():
-                generate_all_btn = gr.Button("🎥 Generate All Scenes", variant="primary")
-                export_btn = gr.Button("💾 Export Timeline JSON", variant="secondary")
+                export_btn = gr.Button("💾 Export Timeline JSON", variant="primary")
                 clear_btn = gr.Button("🗑️ Clear Timeline", variant="secondary")
         
-        # Right Column - Timeline & Preview
+        # Right Column
         with gr.Column(scale=1):
             gr.Markdown("## 📽️ Timeline")
             
@@ -221,20 +160,12 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
                 placeholder="Add scenes to see them here..."
             )
             
-            gr.Markdown("## 🎥 Preview")
-            
-            video_preview = gr.Video(label="Scene Preview")
-            
-            generation_status = gr.Textbox(
-                label="Generation Status",
-                lines=6,
-                placeholder="Click 'Generate All Scenes' to start..."
-            )
+            gr.Markdown("## 💾 Export JSON")
             
             timeline_json = gr.Textbox(
-                label="Timeline JSON (for export)",
-                lines=8,
-                visible=True
+                label="Timeline JSON",
+                lines=10,
+                placeholder="Click 'Export Timeline JSON' to generate..."
             )
     
     # Info Section
@@ -242,26 +173,23 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
         gr.Markdown("""
         ### 🌟 Features
         - **Prompt-Driven**: Describe scenes with text
-        - **Reference Images**: Upload 3D renders from Meshy, Hexagen, Hyper3D
         - **Timeline Editor**: Visual scene arrangement
         - **Audio Sync**: Automatic beat detection
         - **Camera Control**: Multiple camera motion presets
         
-        ### 🛠️ Supported 3D Platforms
-        - [Meshy AI](https://www.meshy.ai/)
-        - [Hexagen](https://hexagen.ai/)
-        - [Hyper3D](https://hyper3d.ai/)
-        
         ### 📝 Workflow
         1. Upload audio → Analyze for beat detection
-        2. Add scenes with prompts and/or reference images
-        3. Arrange on timeline with camera motions
-        4. Generate videos for each scene
-        5. Export final music video
+        2. Add scenes with prompts and camera motions
+        3. Arrange on timeline
+        4. Export as JSON for further processing
         
-        ### ⚠️ Current Limitations
-        This is an MVP version. Full video generation requires GPU resources.
-        For production use, deploy with GPU-enabled infrastructure.
+        ### ⚠️ Current Status
+        This is an MVP framework. Video generation will be added in future updates.
+        
+        ### 🔮 Coming Soon
+        - Reference image upload for 3D integration
+        - Video generation with Stable Video Diffusion
+        - Frame interpolation for smooth playback
         """)
     
     # Event Handlers
@@ -273,7 +201,7 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
     
     add_scene_btn.click(
         fn=add_scene,
-        inputs=[scene_prompt, reference_image, start_time, duration, camera_motion],
+        inputs=[scene_prompt, start_time, duration, camera_motion],
         outputs=[timeline_display, scene_status]
     )
     
@@ -290,4 +218,3 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
 if __name__ == "__main__":
     logger.info("Starting VibeMV Studio...")
     app.launch()
-
