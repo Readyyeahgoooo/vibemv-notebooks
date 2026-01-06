@@ -234,7 +234,7 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
             timeline_json = gr.Textbox(
                 label="Timeline JSON (for export)",
                 lines=8,
-                visible=False
+                visible=True
             )
     
     # Info Section
@@ -280,9 +280,6 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
     export_btn.click(
         fn=export_timeline,
         outputs=[timeline_json]
-    ).then(
-        lambda: gr.update(visible=True),
-        outputs=[timeline_json]
     )
     
     clear_btn.click(
@@ -292,8 +289,5 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
 
 if __name__ == "__main__":
     logger.info("Starting VibeMV Studio...")
-    app.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        share=False
-    )
+    app.launch()
+
