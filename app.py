@@ -6,10 +6,14 @@ Streamlit Version (No dependency conflicts!)
 import streamlit as st
 import json
 import logging
+import os
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load HF token from secrets/environment (secure)
+HF_TOKEN = os.getenv("HF_TOKEN") or st.secrets.get("HF_TOKEN", None)
 
 # Initialize session state
 if 'scenes' not in st.session_state:
@@ -150,11 +154,12 @@ with col1:
     
     st.header("🎬 4. Generate Video")
     
-    hf_token = st.text_input(
-        "HuggingFace Token (Optional - for higher rate limits)",
-        type="password",
-        help="Get your token at https://huggingface.co/settings/tokens"
-    )
+    # Show token status (secure - no input field)
+    if HF_TOKEN:
+        st.info("✅ Using HuggingFace token from Spaces secrets")
+    else:
+        st.warning("⚠️ No HF token configured. Add HF_TOKEN to Space secrets for better performance.")
+    
     
     if st.button("🚀 Generate Video", type="primary", disabled=not st.session_state.scenes or not audio_file):
         if not st.session_state.scenes:
@@ -173,8 +178,8 @@ with col1:
                         tmp_audio.write(audio_file.read())
                         audio_path = tmp_audio.name
                     
-                    # Initialize generator
-                    generator = VideoGenerator(hf_token=hf_token if hf_token else None)
+                    # Initialize generator with token from secrets
+                    generator = VideoGenerator(hf_token=HF_TOKEN)
                     compositor = VideoCompositor()
                     
                     # Generate frames for each scene
