@@ -21,7 +21,7 @@ scenes_state = []
 def analyze_audio(audio_file):
     """Analyze audio file and detect beats for timeline."""
     if not audio_file:
-        return None, "❌ Please upload an audio file first."
+        return "❌ Please upload an audio file first."
     
     try:
         import librosa
@@ -67,11 +67,11 @@ Click "Add Scene" to start building your music video!
         global scenes_state
         scenes_state = []
         
-        return scene_times, analysis_text
+        return analysis_text
         
     except Exception as e:
         logger.error(f"Audio analysis failed: {e}")
-        return None, f"❌ Audio analysis failed: {str(e)}"
+        return f"❌ Audio analysis failed: {str(e)}"
 
 def add_scene(prompt, reference_image, start_time, duration, camera_motion):
     """Add a new scene to the timeline."""
@@ -268,7 +268,7 @@ with gr.Blocks(title="VibeMV Studio", theme=gr.themes.Soft()) as app:
     analyze_btn.click(
         fn=analyze_audio,
         inputs=[audio_input],
-        outputs=[gr.State(), audio_analysis]
+        outputs=[audio_analysis]
     )
     
     add_scene_btn.click(
