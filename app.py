@@ -48,8 +48,8 @@ def analyze_audio(audio_file):
         Path(tmp_path).unlink()
         
         return {
-            'duration': duration,
-            'tempo': tempo,
+            'duration': float(duration),
+            'tempo': float(tempo),
             'beats': len(beat_times),
             'scene_times': scene_times
         }
