@@ -1,5 +1,5 @@
-# Force compatible huggingface_hub version that has HfFolder
-huggingface_hub<0.20.0
+# Pin exact version with HfFolder class
+huggingface_hub==0.16.4
 # Additional dependencies
 numpy>=1.24.0,<2.0.0
 librosa>=0.10.0
