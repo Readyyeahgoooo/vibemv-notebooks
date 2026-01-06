@@ -1,6 +1,7 @@
-# Compatible dependency versions for Gradio 3.x
+# Strictly compatible versions for Gradio 3.x
 gradio==3.50.2
-huggingface-hub==0.16.4
-numpy>=1.24.0
+huggingface-hub==0.14.1
+numpy>=1.24.0,<2.0.0
 librosa>=0.10.0
 soundfile>=0.12.0
+numba>=0.56.0
