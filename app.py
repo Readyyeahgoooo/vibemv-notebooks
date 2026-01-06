@@ -129,7 +129,7 @@ with col1:
         add_scene(prompt, start, duration, camera)
         st.success(f"✅ Added Scene {len(st.session_state.scenes)}")
     
-    st.header("💾 3. Export")
+    st.header("💾 3. Export & Generate")
     
     col_export, col_clear = st.columns(2)
     with col_export:
@@ -145,6 +145,88 @@ with col1:
         if st.button("🗑️ Clear Timeline"):
             clear_timeline()
             st.rerun()
+    
+    st.markdown("---")
+    
+    st.header("🎬 4. Generate Video")
+    
+    hf_token = st.text_input(
+        "HuggingFace Token (Optional - for higher rate limits)",
+        type="password",
+        help="Get your token at https://huggingface.co/settings/tokens"
+    )
+    
+    if st.button("🚀 Generate Video", type="primary", disabled=not st.session_state.scenes or not audio_file):
+        if not st.session_state.scenes:
+            st.error("❌ Please add scenes first!")
+        elif not audio_file:
+            st.error("❌ Please upload audio first!")
+        else:
+            with st.spinner("🎬 Generating video... This may take a few minutes"):
+                try:
+                    import tempfile
+                    from vibemv.video_generator import VideoGenerator
+                    from vibemv.compositor import VideoCompositor
+                    
+                    # Save audio temporarily
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_audio:
+                        tmp_audio.write(audio_file.read())
+                        audio_path = tmp_audio.name
+                    
+                    # Initialize generator
+                    generator = VideoGenerator(hf_token=hf_token if hf_token else None)
+                    compositor = VideoCompositor()
+                    
+                    # Generate frames for each scene
+                    all_scene_frames = []
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    for idx, scene in enumerate(st.session_state.scenes):
+                        status_text.text(f"Generating scene {idx + 1}/{len(st.session_state.scenes)}...")
+                        progress_bar.progress((idx) / len(st.session_state.scenes))
+                        
+                        frames = generator.generate_scene_frames(scene, fps=24)
+                        all_scene_frames.append(frames)
+                    
+                    status_text.text("Compositing video...")
+                    progress_bar.progress(0.9)
+                    
+                    # Create video
+                    output_path = tempfile.mktemp(suffix='.mp4')
+                    success = compositor.create_video(all_scene_frames, audio_path, output_path, fps=24)
+                    
+                    if success:
+                        progress_bar.progress(1.0)
+                        status_text.text("✅ Video generation complete!")
+                        
+                        # Provide download
+                        with open(output_path, 'rb') as video_file:
+                            st.download_button(
+                                label="📥 Download Video",
+                                data=video_file.read(),
+                                file_name="vibemv_output.mp4",
+                                mime="video/mp4"
+                            )
+                        
+                        st.success("🎉 Your music video is ready!")
+                        
+                        # Clean up
+                        Path(output_path).unlink()
+                        Path(audio_path).unlink()
+                    else:
+                        st.error("❌ Video generation failed. Check logs.")
+                        
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    logger.error(f"Video generation error: {e}")
+    
+    
+    if not st.session_state.scenes:
+        st.info("ℹ️ Add scenes to your timeline to enable video generation")
+    elif not audio_file:
+        st.info("ℹ️ Upload audio to enable video generation")
+
 
 with col2:
     st.header("📽️ Timeline")
