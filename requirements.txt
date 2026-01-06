@@ -1,6 +1,5 @@
-# Pin exact version with HfFolder class
-huggingface_hub==0.16.4
-# Additional dependencies
+# Streamlit and dependencies (no Gradio conflicts!)
+streamlit>=1.32.0
 numpy>=1.24.0,<2.0.0
 librosa>=0.10.0
 soundfile>=0.12.0

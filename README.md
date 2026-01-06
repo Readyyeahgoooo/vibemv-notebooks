@@ -3,8 +3,8 @@ title: VibeMV Studio
 emoji: 🎬
 colorFrom: purple
 colorTo: pink
-sdk: gradio
-sdk_version: 5.0.1
+sdk: streamlit
+sdk_version: 1.32.0
 app_file: app.py
 pinned: false
 license: mit
@@ -12,10 +12,10 @@ license: mit
 
 # 🎬 VibeMV Studio - AI Music Video Generator
 
-An AI-powered music video creation studio for creating timeline-based music videos.
+An AI-powered music video timeline generator with audio beat detection.
 
 ## Features
-- Audio beat detection
-- Scene timeline creation  
+- Audio beat detection with librosa
+- Scene timeline creation
 - Camera motion presets
-- JSON export
+- JSON export for further processing
